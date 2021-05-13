@@ -3,11 +3,17 @@ package com.elements.pay.demo
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.appcompat.app.AlertDialog
+import androidx.lifecycle.Observer
 import com.elements.pay.demo.databinding.ActivityMainBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.elements.pay.api.Environment
 import io.elements.pay.api.client.ElementsApiClient
 import io.elements.pay.api.client.ElementsApiClientConfiguration
+import io.elements.pay.components.card.CardComponent
+import io.elements.pay.components.card.CardConfiguration
+import io.elements.pay.components.model.paymentmethods.PaymentMethod
+import io.elements.pay.components.model.paymentmethods.PaymentMethodSupportedData
+import io.elements.pay.components.model.payments.request.CardPaymentMethod
 import io.elements.pay.log.LogUtil
 import io.elements.pay.log.Logger
 import io.elements.pay.model.public.*
@@ -20,6 +26,7 @@ class MainActivity : AppCompatActivity() {
 
     private val clientToken = "TODO: Your client token fetched from backend goes here..."
     private val stripeKey = "TODO: Optional if you want to provide your Stripe publishable key as a fall back method..."
+    private var currentCardParams: ElementsCardParams? = null
 
     private lateinit var binding: ActivityMainBinding
 
@@ -29,15 +36,16 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         setSupportActionBar(findViewById(R.id.toolbar))
 
+        showCardComponent()
+
         binding.payButton.setOnClickListener {
-            tokenizeCard(ElementsCardParams(
-                "4242424242424242",2, 24, "123", "!23"
-            ))
+            currentCardParams?.let {
+                tokenizeCard(it)
+            }
         }
     }
 
     private fun tokenizeCard(cardParams: ElementsCardParams) {
-        // Optional list if you want to provide your psp infos.
         val pspCustomers = arrayListOf(
             PspCustomer(
                 pspAccount = PspAccount("STRIPE", "TODO: Your stripe account goes here..."),
@@ -64,6 +72,34 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+    private fun showCardComponent() {
+        val cardConfiguration = CardConfiguration.Builder(this@MainActivity, Environment.sandbox(clientToken))
+            .setShowStorePaymentField(false)
+            .setHolderNameRequired(true)
+            .build()
+        val paymentMethod = PaymentMethod()
+        paymentMethod.type = "credit_cards"
+        paymentMethod.supportedDataList = listOf("mc", "visa", "amex", "maestro", "cup", "diners", "discover", "jcb").map {
+            val paymentMethodSupportedData = PaymentMethodSupportedData()
+            paymentMethodSupportedData.brand = it
+            paymentMethodSupportedData.label = it
+            paymentMethodSupportedData
+        }
+
+        val cardComponent = CardComponent.PROVIDER.get(this@MainActivity, paymentMethod, cardConfiguration)
+        binding.cardView.attach(cardComponent, this@MainActivity)
+        cardComponent.observe(this@MainActivity, Observer {
+            if (it.isValid) {
+                it.data.paymentMethod?.let { paymentMethod ->
+                    val json = CardPaymentMethod.SERIALIZER.serialize(paymentMethod)
+                    currentCardParams = ElementsCardParams.SERIALIZER.deserialize(json)
+                }
+            } else {
+                currentCardParams = null
+            }
+        })
+    }
+
     private fun createAlertDialog(title: String, message: String): AlertDialog {
         return MaterialAlertDialogBuilder(this)
             .setTitle(title)
@@ -76,9 +112,9 @@ class MainActivity : AppCompatActivity() {
         var result = "Elements Token Object\n"
         result += "Psp Tokens\n"
         for (pspToken in token.pspTokens) {
-            result += "${pspToken.pspAccount.pspType.toLowerCase(Locale.getDefault())} : ${pspToken.token}"
+            result += "${pspToken.pspAccount.pspType.toLowerCase(Locale.getDefault())} token: ${pspToken.token}"
         }
-        result += "\nElements Card\n"
+        result += "\n\nElements Card\n"
         var cardDisplay = "Card id: ${token.card.id}\n"
         val brand = token.card.brand ?: "Unknown brand"
         val last4 = token.card.last4 ?: "Unknown last 4"
