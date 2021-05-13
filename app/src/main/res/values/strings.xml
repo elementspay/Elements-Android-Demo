@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">Elements Demo</string>
-    <string name="pay_button">Pay</string>
+    <string name="pay_button">Tokenize Card</string>
 </resources>
