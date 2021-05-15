@@ -11,11 +11,12 @@ import io.elements.pay.api.client.ElementsApiClient
 import io.elements.pay.api.client.ElementsApiClientConfiguration
 import io.elements.pay.components.card.CardComponent
 import io.elements.pay.components.card.CardConfiguration
-import io.elements.pay.components.model.paymentmethods.PaymentMethod
-import io.elements.pay.components.model.paymentmethods.PaymentMethodSupportedData
 import io.elements.pay.components.model.payments.request.CardPaymentMethod
 import io.elements.pay.log.LogUtil
 import io.elements.pay.log.Logger
+import io.elements.pay.model.*
+import io.elements.pay.model.paymentmethods.PaymentMethod
+import io.elements.pay.model.paymentmethods.PaymentMethodSupportedData
 import io.elements.pay.model.public.*
 import java.util.*
 
@@ -48,7 +49,7 @@ class MainActivity : AppCompatActivity() {
     private fun tokenizeCard(cardParams: ElementsCardParams) {
         val pspCustomers = arrayListOf(
             PspCustomer(
-                pspAccount = PspAccount("STRIPE", "TODO: Your stripe account goes here..."),
+                pspAccount = PspAccount(SupportedPspType.STRIPE, "TODO: Your stripe account goes here..."),
                 customerId = "TODO: Optional for customer id"
             )
         )
@@ -112,7 +113,7 @@ class MainActivity : AppCompatActivity() {
         var result = "Elements Token Object\n"
         result += "Psp Tokens\n"
         for (pspToken in token.pspTokens) {
-            result += "${pspToken.pspAccount.pspType.toLowerCase(Locale.getDefault())} token: ${pspToken.token}"
+            result += "${pspToken.pspAccount.pspType.value.toLowerCase(Locale.getDefault())} token: ${pspToken.token}"
         }
         result += "\n\nElements Card\n"
         var cardDisplay = "Card id: ${token.card.id}\n"
