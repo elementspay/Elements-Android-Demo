@@ -74,7 +74,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showCardComponent() {
-        val cardConfiguration = CardConfiguration.Builder(this@MainActivity, Environment.sandbox(clientToken))
+        val cardConfiguration = CardConfiguration.Builder(this@MainActivity, Environment.production(clientToken))
             .setShowStorePaymentField(false)
             .setHolderNameRequired(true)
             .build()
