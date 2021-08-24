@@ -117,7 +117,7 @@ ElementsToken(
 
 ### 3DS2 Flow ###
 
-`ElementsAPIClient` also supports tokenize card with 3DS2 auth flow enabled. In order to handle 3DS2 flow correctly you need to pass an `activity` param to the tokenization method. This activity will be the host of all 3DS flow activities from Elements.
+`ElementsApiClient` also supports tokenize card with 3DS2 auth flow enabled. In order to handle 3DS2 flow correctly you need to pass an `activity` param to the tokenization method. This activity will be the host of all 3DS flow activities from Elements.
 
 ```kotlin
 private fun tokenizeCard(cardParams: ElementsCardParams) {
