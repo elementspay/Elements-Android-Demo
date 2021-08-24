@@ -40,7 +40,9 @@ allprojects {
         jcenter()
         google()
         maven {
-            url "https://s01.oss.sonatype.org/content/groups/public"
+            allowInsecureProtocol = true
+            //url "https://s01.oss.sonatype.org/content/groups/public"
+            url "http://localhost:8081/repository/maven-releases/"
         }
         mavenCentral()
     }
@@ -54,7 +56,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.3.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
 
-    implementation("io.elements.pay:card:1.0.0-beta01")
+    implementation("io.elements.pay:core-module:1.0.1-beta08")
 
     testImplementation 'junit:junit:4.+'
     androidTestImplementation 'androidx.test.ext:junit:1.1.2'

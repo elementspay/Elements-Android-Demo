@@ -11,7 +11,7 @@
         android:id="@+id/include"
         layout="@layout/toolbar" />
 
-    <io.elements.pay.components.card.CardView
+    <io.elements.pay.modules.card.CardView
         android:id="@+id/cardView"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
