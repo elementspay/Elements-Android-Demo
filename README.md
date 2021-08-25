@@ -47,7 +47,7 @@ dependencies {
 
 ### ElementsApiClient
 
-The [ElementsApiClient] handles the low level api communications to Elements server. i.e. Card Tokenization
+The `ElementsApiClient` handles the low level api communications to Elements server. i.e. Card Tokenization
 
 #### Initialize the API client.
 
