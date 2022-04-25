@@ -39,7 +39,7 @@ Add `io.elements.pay:core-module` to your `build.gradle` dependencies.
 ### Gradle
 ```
 dependencies {
-    implementation 'io.elements.pay:core-module:0.1.7'
+    implementation 'io.elements.pay:core-module:1.0.1-beta01'
 }
 ```
 
@@ -47,27 +47,18 @@ dependencies {
 
 ### ElementsApiClient
 
-The [ElementsApiClient] handles the low level api communications to Elements server. i.e. Card Tokenization
+The `ElementsApiClient` handles the low level api communications to Elements server. i.e. Card Tokenization
 
 #### Initialize the API client.
 
 The api client requires `clientToken` fetched from your backend server. Once you have obtained your `clientToken` you can initialize the api client in the following way.
 
 ```kotlin
-
-// Optional field if you want to provide your psp customer info.
-val pspCustomers = arrayListOf(
-  PspCustomer(
-    pspAccount = PspAccount("STRIPE", "F56FGLTABXWVR"),
-    customerId = "cus_JPlDyCKLEaq8mO"
-  )
-)
 // Environment -> The environment that ElementsApiClient runs.
-// PspCustomers -> Optional list if you want to provide your psp customer info.
 // StripeTestKey -> Optional if you want to take fall back to Stripe tokenization
 // if elements tokenization failed
 val configuration = ElementsApiClientConfiguration(
-  Environment.sandbox(clientToken), pspCustomers, stripeTestKey
+  Environment.sandbox(clientToken)
 )
 val elementsApiClient = ElementsApiClient(configuration = configuration)
 ```
@@ -89,7 +80,7 @@ Once you have created the `ElementsAPIClient` and `ElementsCardParams` you can c
 ```kotlin
 elementsApiClient.tokenizeCard(cardParams, callback = object : ApiResultCallback<VaultToken> {
   override fun onSuccess(result: VaultToken) {
-    Logger.d(TAG, "Tokenization succeeded $result")
+    Log.d(TAG, "Tokenization succeeded $result")
     result.elementsToken?.let {
       // Now you can pass this token object to your backend server
     }
@@ -101,22 +92,18 @@ elementsApiClient.tokenizeCard(cardParams, callback = object : ApiResultCallback
 
   override fun onError(e: Exception) {
     // Check ElementsException for tokenization failure.
-    Logger.d(TAG, "Tokenization failed $e")
+    Log.d(TAG, "Tokenization failed $e")
   }
 })
 ```
 
 ### ElementsToken
 
-The `ElementsToken` struct returns the response received from Elements server once tokenization succeeded. It contains the corresponded tokens matching the `[PspCustomer]` you have configured in `ElementsApiClient`. It will also contains a `ElementsCard` object that has the tokenized card info.
+The `ElementsToken` model returns the response received from Elements server once tokenization succeeded. It contains the corresponded elements token matching the `ElementsCardParams` you passed in the method. It will also contain an `ElementsCard` object that has the tokenized card info.
 
 ```kotlin
 ElementsToken(
-  pspTokens= [
-    PspToken(pspAccount = PspAccount(pspType = STRIPE, accountId=xxxxxxxx),
-    customerId = null,
-    token = tok_xxxxxxxxxxxxxxxx)
-  ],
+  id = tok_xxxxxxxxxxxxxxxx
   card = ElementsCard(
     id = card-9a06775f-d4d7-4413-8fed-379ac610283e, 
     last4 = 4242, 
@@ -127,6 +114,45 @@ ElementsToken(
   )
 )
 ```
+
+### 3DS2 Flow ###
+
+`ElementsApiClient` also supports tokenize card with 3DS2 auth flow enabled. In order to handle 3DS2 flow correctly you need to pass an `activity` param to the tokenization method. This activity will be the host of all 3DS flow activities from Elements.
+
+```kotlin
+private fun tokenizeCard(cardParams: ElementsCardParams) {
+    client.tokenizeCard(cardParams, this, callback = object : ApiResultCallback<VaultToken> {
+        override fun onSuccess(result: VaultToken) {
+            result.elementsToken?.let {
+                Log.d("Tokenization succeeded", parseElementsTokenToDisplayString(it)).show()
+            }
+            result.fallbackStripToken?.let {
+                Log.d("Tokenization succeeded", "Stripe token $it").show()
+            }
+        }
+
+        override fun onError(e: Exception) {
+            Log.d(TAG, "Tokenization failed $e")
+        }
+    })
+}
+```
+You will also need to listen for 3DS result from `onActivityResult` and obtain result from apiClient.
+```kotlin
+override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+    super.onActivityResult(requestCode, resultCode, data)
+    client.onTokenizationSetupResult(requestCode, data, object : ApiResultCallback<ElementsToken> {
+        override fun onSuccess(result: ElementsToken) {
+            Log.d(TAG, "Tokenization succeeded $result")
+        }
+
+        override fun onError(e: Exception) {
+            Log.d(TAG, "Tokenization failed $e")
+        }
+    })
+}
+```
+Now the token you obtained from `onActivityResult` will be a token validated through 3DS.
 
 ### Example App
 
