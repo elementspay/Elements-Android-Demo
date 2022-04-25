@@ -7,6 +7,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.lifecycle.Observer
 import com.elements.pay.demo.databinding.ActivityMainBinding
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import java.lang.ref.WeakReference
+import android.util.Log
 import io.elements.pay.api.Environment
 import io.elements.pay.api.client.ElementsApiClient
 import io.elements.pay.api.client.ElementsApiClientConfiguration
@@ -14,14 +16,12 @@ import io.elements.pay.model.internalmodel.paymentmethods.ElementsCardParams
 import io.elements.pay.model.paymentmethods.PaymentMethod
 import io.elements.pay.model.paymentmethods.PaymentMethodSupportedData
 import io.elements.pay.model.publicinterface.ApiResultCallback
+import io.elements.pay.model.publicinterface.ElementsToken
 import io.elements.pay.model.publicinterface.VaultToken
 import io.elements.pay.modules.actions.driver.ElementsActionDriver
-import io.elements.pay.model.publicinterface.ElementsToken
 import io.elements.pay.modules.actions.redirect.RedirectUtil
 import io.elements.pay.modules.card.CardConfiguration
 import io.elements.pay.modules.card.CardElement
-import java.lang.ref.WeakReference
-import android.util.Log
 
 class MainActivity : AppCompatActivity(), ElementsActionDriver.ActionCompletionListener {
 
@@ -41,7 +41,7 @@ class MainActivity : AppCompatActivity(), ElementsActionDriver.ActionCompletionL
             WeakReference(this)
         )
         binding = ActivityMainBinding.inflate(layoutInflater)
-        val configuration = ElementsApiClientConfiguration(Environment.sandbox(clientToken))
+        val configuration = ElementsApiClientConfiguration(Environment.sandbox(clientToken), stripePublishableKey = stripeKey)
         client = ElementsApiClient(configuration = configuration)
         handleIntent(intent)
         setContentView(binding.root)
